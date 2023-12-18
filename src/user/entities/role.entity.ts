@@ -8,7 +8,9 @@ import {
 } from 'typeorm';
 import { Permission } from './permission';
 
-@Entity()
+@Entity({
+  name: 'roles',
+})
 export class Role {
   @PrimaryGeneratedColumn()
   id: number;

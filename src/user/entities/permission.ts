@@ -1,4 +1,21 @@
-import { Entity } from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
-@Entity()
-export class Permission {}
+@Entity({
+  name: 'permissions',
+})
+export class Permission {
+  @PrimaryGeneratedColumn()
+  id: number;
+
+  @Column({
+    length: 20,
+    comment: 'permission code',
+  })
+  code: string;
+
+  @Column({
+    length: 100,
+    comment: 'permission description',
+  })
+  description: string;
+}
