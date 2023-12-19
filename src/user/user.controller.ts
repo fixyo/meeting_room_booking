@@ -42,4 +42,10 @@ export class UserController {
 
     return '发送成功';
   }
+
+  @Get('initData')
+  async initData() {
+    await this.userService.initData();
+    return 'success';
+  }
 }
