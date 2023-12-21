@@ -2,6 +2,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
   JoinTable,
   ManyToMany,
   PrimaryGeneratedColumn,
@@ -37,7 +38,7 @@ export class User {
 
   @Column({
     comment: 'email',
-    length: 50,
+    length: 70,
   })
   email: string;
 
@@ -76,6 +77,8 @@ export class User {
   @ManyToMany((type) => Role)
   @JoinTable({
     name: 'user_roles',
+    // inverseJoinColumn: { name: 'rolessId' },
+    // joinColumn: { name: 'rolessId' },
   })
-  roles: Role[];
+  roless: Role[];
 }

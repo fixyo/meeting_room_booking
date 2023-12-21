@@ -16,6 +16,7 @@ import { md5 } from 'src/utls';
 import { Role } from './entities/role.entity';
 import { Permission } from './entities/permission';
 import { LoginUserDto } from './dto/login-user.dto';
+import { LoginUserVo } from './vo/login-user.vo';
 
 @Injectable()
 export class UserService {
@@ -67,12 +68,47 @@ export class UserService {
     }
   }
 
-  async login(loginUser: LoginUserDto) {
-    const user = this.userRepository.findOne({
+  async login(loginUser: LoginUserDto, isAdmin: boolean) {
+    const user = await this.userRepository.findOne({
       where: {
-        nickname: loginUser.username,
+        username: loginUser.username,
+        isAdmin,
       },
+      // roless UserEntity中定义的属性名
+      relations: ['roless', 'roless.permissions'],
     });
+
+    // console.log(user, 'user===');
+
+    if (!user) {
+      throw new HttpException('user does not exist', HttpStatus.BAD_REQUEST);
+    }
+
+    if (user.password !== md5(loginUser.password)) {
+      throw new HttpException('password incorrect', HttpStatus.BAD_REQUEST);
+    }
+    const vo = new LoginUserVo();
+    vo.userInfo = {
+      id: user.id,
+      username: user.username,
+      nickname: user.nickname,
+      avatar: user.avatar,
+      email: user.email,
+      phoneNumber: user.phoneNumber,
+      createAt: user.createAt,
+      isFrozen: user.isFrozen,
+      isAdmin: user.isAdmin,
+      roles: user.roless.map((item) => item.name),
+      permissions: user.roless.reduce((cache, item) => {
+        item.permissions.forEach((permission) => {
+          if (!cache.includes(permission)) {
+            cache.push(permission);
+          }
+        });
+        return cache;
+      }, []),
+    };
+    return vo;
   }
 
   async initData() {
@@ -104,8 +140,8 @@ export class UserService {
     permission2.code = 'ddd';
     permission2.description = '访问 ddd 接口';
 
-    user1.roles = [role1];
-    user2.roles = [role2];
+    user1.roless = [role1];
+    user2.roless = [role2];
 
     role1.permissions = [permission1, permission2];
     role2.permissions = [permission1];
@@ -113,5 +149,28 @@ export class UserService {
     await this.permissionRepository.save([permission1, permission2]);
     await this.roleRepository.save([role1, role2]);
     await this.userRepository.save([user1, user2]);
+  }
+
+  async findUserById(userId: number, isAdmin: boolean) {
+    const user = await this.userRepository.findOne({
+      where: { id: userId, isAdmin },
+      relations: ['roless', 'roless.permissions'],
+    });
+    if (!user) throw new HttpException('user does not exit', HttpStatus.OK);
+
+    return {
+      id: user.id,
+      username: user.username,
+      isAdmin: user.isAdmin,
+      roles: user.roless,
+      permissions: user.roless.reduce((arr, item) => {
+        item.permissions.forEach((permission) => {
+          if (arr.indexOf(permission) === -1) {
+            arr.push(permission);
+          }
+        });
+        return arr;
+      }, []),
+    };
   }
 }
