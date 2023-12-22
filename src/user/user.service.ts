@@ -9,7 +9,14 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { RegisterUserDto } from './dto/register.user.dto';
 import { InjectEntityManager, InjectRepository } from '@nestjs/typeorm';
-import { EntityManager, Repository } from 'typeorm';
+import {
+  DataSource,
+  EntityManager,
+  Like,
+  QueryBuilder,
+  Repository,
+  getConnection,
+} from 'typeorm';
 import { User } from './entities/user.entity';
 import { RedisService } from 'src/redis/redis.service';
 import { md5 } from 'src/utls';
@@ -157,7 +164,8 @@ export class UserService {
       where: { id: userId, isAdmin },
       relations: ['roless', 'roless.permissions'],
     });
-    if (!user) throw new HttpException('user does not exit', HttpStatus.OK);
+    if (!user)
+      throw new HttpException('user does not exit', HttpStatus.BAD_REQUEST);
 
     return {
       id: user.id,
@@ -183,16 +191,17 @@ export class UserService {
 
   async updatePassword(userId: number, passwordDto: UpdateUserPasswordDto) {
     const captcha = await this.redisService.get(`captcha_${passwordDto.email}`);
-    if (!captcha) throw new HttpException('captcha expires', HttpStatus.OK);
+    if (!captcha)
+      throw new HttpException('captcha expires', HttpStatus.BAD_REQUEST);
     if (captcha !== passwordDto.captcha)
-      throw new HttpException('captcha does not match', HttpStatus.OK);
+      throw new HttpException('captcha does not match', HttpStatus.BAD_REQUEST);
 
     const user = await this.userRepository.findOneBy({ id: userId || -1 });
 
     if (!user) throw new HttpException('user doest not exits', HttpStatus.OK);
 
     if (user.email !== passwordDto.email)
-      throw new HttpException('email does not match', HttpStatus.OK);
+      throw new HttpException('email does not match', HttpStatus.BAD_REQUEST);
 
     user.password = md5(passwordDto.password);
 
@@ -213,11 +222,29 @@ export class UserService {
     await this.userRepository.save(user);
   }
 
-  async findUsersByPage(pageNo: number, pageSize: number) {
+  async findUsersByPage(
+    pageNo: number,
+    pageSize: number,
+    username: string,
+    nickname: string,
+    email: string,
+  ) {
     const skipCount = (pageNo - 1) * pageSize;
+    const conditions: Record<string, any> = {};
+    // const queryBuilder = this.userRepository.createQueryBuilder()
+    if (username) {
+      conditions.username = Like(`%${username}%`);
+    }
+    if (nickname) {
+      conditions.nickname = Like(`%${nickname}%`);
+    }
+    if (email) {
+      conditions.email = Like(`%${email}%`);
+    }
     const [users, totalCount] = await this.userRepository.findAndCount({
       skip: skipCount,
       take: pageSize,
+      where: conditions,
     });
     return {
       users,

@@ -3,21 +3,13 @@ import {
   Get,
   Post,
   Body,
-  Patch,
-  Param,
-  Delete,
   Query,
   Inject,
-  HttpException,
   UnauthorizedException,
   HttpStatus,
-  ParseIntPipe,
-  BadRequestException,
   DefaultValuePipe,
 } from '@nestjs/common';
 import { UserService } from './user.service';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
 import { RegisterUserDto } from './dto/register.user.dto';
 import { RedisService } from 'src/redis/redis.service';
 import { EmailService } from 'src/email/email.service';
@@ -27,11 +19,21 @@ import { ConfigService } from '@nestjs/config';
 import { RequireLogin, UserInfo } from 'src/custom-decorator';
 import { UserDetailVo } from './vo/user-detail.vo';
 import { UpdateUserPasswordDto } from './dto/update-user-password.dto';
-import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
 import { genParseIntPipe } from 'src/utls';
-
+import {
+  ApiTags,
+  ApiQuery,
+  ApiResponse,
+  ApiBody,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
+import { LoginUserVo } from './vo/login-user.vo';
+import { RefreshTokenVo } from './vo/refresh-token.vo';
+import { UserListVo } from './vo/user-list.vo';
+@ApiTags('user management module')
 @Controller('user')
 @RequireLogin()
 export class UserController {
@@ -58,6 +60,12 @@ export class UserController {
   }
 
   @Get('info')
+  @ApiBearerAuth()
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'user detail',
+    type: UserDetailVo,
+  })
   async info(@UserInfo('userId') userId: number) {
     const user = await this.userService.findUserDetailById(userId);
     const vo = new UserDetailVo();
@@ -71,14 +79,37 @@ export class UserController {
     return vo;
   }
 
-  @RequireLogin(false)
   @Post('register')
+  @RequireLogin(false)
+  @ApiBody({ type: RegisterUserDto })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'captcha expires|user already exist',
+    type: String,
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'regist succeed/failed',
+    type: String,
+  })
   async register(@Body() registerUser: RegisterUserDto) {
     return await this.userService.register(registerUser);
   }
 
-  @RequireLogin(false)
   @Get('register-captcha')
+  @RequireLogin(false)
+  @ApiQuery({
+    name: 'email',
+    type: String,
+    description: 'email address',
+    required: true,
+    example: 'aaa@aaa.com',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'send successfully',
+    type: String,
+  })
   async captcha(@Query('email') email: string) {
     const code = Math.random().toString().slice(2, 8);
     await this.redisService.set(`captcha_${email}`, code, 30 * 60);
@@ -93,6 +124,17 @@ export class UserController {
 
   @Post('login')
   @RequireLogin(false)
+  @ApiBody({ type: LoginUserDto })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'user does not exist | password incorrect',
+    type: String,
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'user info and token',
+    type: LoginUserVo,
+  })
   async login(@Body() loginUser: LoginUserDto) {
     const user = await this.userService.login(loginUser, true);
     const accessToken = this.jwtService.sign(
@@ -120,6 +162,22 @@ export class UserController {
   }
 
   @Get('refresh-token')
+  @ApiQuery({
+    type: String,
+    description: 'refresh token',
+    required: true,
+    example: 'aajnhHAjan.xajah.xxa',
+  })
+  @ApiResponse({
+    status: HttpStatus.UNAUTHORIZED,
+    description: 'token expired',
+    type: String,
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'refresh token succeed',
+    type: RefreshTokenVo,
+  })
   async refresh(@Query('refreshToken') token: string) {
     console.log(token, 'token');
     try {
@@ -152,6 +210,16 @@ export class UserController {
   }
 
   @Post('update-password')
+  @ApiBearerAuth()
+  @ApiBody({ type: UpdateUserPasswordDto })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'captcha expired/incorrect',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'update password succeed',
+  })
   async updatePassword(
     @UserInfo('userId') userId: number,
     @Body() passwordDto: UpdateUserPasswordDto,
@@ -165,6 +233,42 @@ export class UserController {
   }
 
   @Get('list')
+  @ApiBearerAuth()
+  @ApiQuery({
+    name: 'pageNo',
+    required: true,
+    description: 'current page',
+    type: Number,
+  })
+  @ApiQuery({
+    name: 'pageSize',
+    required: true,
+    description: 'how many records per page',
+    type: Number,
+  })
+  @ApiQuery({
+    name: 'username',
+    description: 'username',
+    required: false,
+    type: String,
+  })
+  @ApiQuery({
+    name: 'nickname',
+    description: 'nickname',
+    required: false,
+    type: String,
+  })
+  @ApiQuery({
+    name: 'email',
+    description: 'email address',
+    required: false,
+    type: String,
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'user list',
+    type: UserListVo,
+  })
   async list(
     @Query(
       'pageNo',
@@ -178,7 +282,16 @@ export class UserController {
       genParseIntPipe('pageSize should be number'),
     )
     pageSize: number,
+    @Query('username') username: string,
+    @Query('nickname') nickname: string,
+    @Query('email') email: string,
   ) {
-    return await this.userService.findUsersByPage(pageNo, pageSize);
+    return await this.userService.findUsersByPage(
+      pageNo,
+      pageSize,
+      username,
+      nickname,
+      email,
+    );
   }
 }

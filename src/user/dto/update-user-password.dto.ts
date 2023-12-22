@@ -1,3 +1,4 @@
+import { ApiProperty } from '@nestjs/swagger';
 import { IsEmail, IsNotEmpty, MinLength } from 'class-validator';
 
 export class UpdateUserPasswordDto {
@@ -7,6 +8,7 @@ export class UpdateUserPasswordDto {
   @MinLength(6, {
     message: 'no less than 6 characters',
   })
+  @ApiProperty({ minLength: 6 })
   password: string;
 
   @IsNotEmpty({
@@ -18,10 +20,12 @@ export class UpdateUserPasswordDto {
       message: 'incorrect email format',
     },
   )
+  @ApiProperty()
   email: string;
 
   @IsNotEmpty({
     message: 'captcha should not be empty',
   })
+  @ApiProperty()
   captcha: string;
 }

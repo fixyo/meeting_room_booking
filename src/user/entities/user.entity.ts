@@ -68,7 +68,16 @@ export class User {
   })
   isAdmin: boolean;
 
-  @CreateDateColumn()
+  @CreateDateColumn({
+    transformer: {
+      from: (v) => {
+        return dayjs(v).format('YYYY-MM-DD HH:mm:ss');
+      },
+      to: (v) => {
+        return v;
+      },
+    },
+  })
   createAt: Date;
 
   @UpdateDateColumn({
