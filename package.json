@@ -30,6 +30,7 @@
     "@types/nodemailer": "^6.4.14",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.0",
+    "dayjs": "^1.11.10",
     "mysql2": "^3.6.5",
     "nodemailer": "^6.9.7",
     "redis": "^4.6.11",

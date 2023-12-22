@@ -17,6 +17,7 @@ import { Role } from './entities/role.entity';
 import { Permission } from './entities/permission';
 import { LoginUserDto } from './dto/login-user.dto';
 import { LoginUserVo } from './vo/login-user.vo';
+import { UpdateUserPasswordDto } from './dto/update-user-password.dto';
 
 @Injectable()
 export class UserService {
@@ -171,6 +172,58 @@ export class UserService {
         });
         return arr;
       }, []),
+    };
+  }
+
+  async findUserDetailById(userId: number) {
+    return await this.userRepository.findOne({
+      where: { id: userId },
+    });
+  }
+
+  async updatePassword(userId: number, passwordDto: UpdateUserPasswordDto) {
+    const captcha = await this.redisService.get(`captcha_${passwordDto.email}`);
+    if (!captcha) throw new HttpException('captcha expires', HttpStatus.OK);
+    if (captcha !== passwordDto.captcha)
+      throw new HttpException('captcha does not match', HttpStatus.OK);
+
+    const user = await this.userRepository.findOneBy({ id: userId || -1 });
+
+    if (!user) throw new HttpException('user doest not exits', HttpStatus.OK);
+
+    if (user.email !== passwordDto.email)
+      throw new HttpException('email does not match', HttpStatus.OK);
+
+    user.password = md5(passwordDto.password);
+
+    try {
+      await this.userRepository.save(user);
+      return 'alter password successfully';
+    } catch (error) {
+      return 'alter password failed';
+    }
+  }
+
+  async freezeUserById(userId: number) {
+    if (!userId)
+      throw new HttpException('userId does not exists', HttpStatus.BAD_REQUEST);
+
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+    user.isFrozen = true;
+    await this.userRepository.save(user);
+  }
+
+  async findUsersByPage(pageNo: number, pageSize: number) {
+    const skipCount = (pageNo - 1) * pageSize;
+    const [users, totalCount] = await this.userRepository.findAndCount({
+      skip: skipCount,
+      take: pageSize,
+    });
+    return {
+      users,
+      total: totalCount,
+      pageNo,
+      pageSize,
     };
   }
 }

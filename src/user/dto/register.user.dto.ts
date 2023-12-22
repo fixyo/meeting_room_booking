@@ -14,7 +14,7 @@ export class RegisterUserDto {
     message: 'password can not be empty',
   })
   @MinLength(6, {
-    message: 'password no short than 6 letters/numbers',
+    message: 'password no short than 6 characters',
   })
   password: string;
 
@@ -24,7 +24,7 @@ export class RegisterUserDto {
   @IsEmail(
     {},
     {
-      message: 'illeage email',
+      message: 'email format incorrect',
     },
   )
   email: string;

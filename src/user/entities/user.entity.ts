@@ -9,7 +9,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { Role } from './role.entity';
-
+import * as dayjs from 'dayjs';
 @Entity({
   name: 'users',
 })
@@ -71,7 +71,17 @@ export class User {
   @CreateDateColumn()
   createAt: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({
+    transformer: {
+      from: (v) => {
+        // console.log('exxx', v);
+        return dayjs(v).format('YYYY-MM-DD HH:mm:ss');
+      },
+      to: (v) => {
+        return v;
+      },
+    },
+  })
   updateAt: Date;
 
   @ManyToMany((type) => Role)
