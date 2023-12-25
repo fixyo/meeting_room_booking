@@ -6,7 +6,7 @@ import {
   ManyToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { Permission } from './permission';
+import { Permission } from './permission.entity';
 
 @Entity({
   name: 'roles',

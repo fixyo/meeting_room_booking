@@ -21,7 +21,7 @@ import { User } from './entities/user.entity';
 import { RedisService } from 'src/redis/redis.service';
 import { md5 } from 'src/utls';
 import { Role } from './entities/role.entity';
-import { Permission } from './entities/permission';
+import { Permission } from './entities/permission.entity';
 import { LoginUserDto } from './dto/login-user.dto';
 import { LoginUserVo } from './vo/login-user.vo';
 import { UpdateUserPasswordDto } from './dto/update-user-password.dto';

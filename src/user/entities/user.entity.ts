@@ -10,6 +10,11 @@ import {
 } from 'typeorm';
 import { Role } from './role.entity';
 import * as dayjs from 'dayjs';
+
+enum Gender {
+  male = 0,
+  female = 1,
+}
 @Entity({
   name: 'users',
 })
@@ -22,6 +27,13 @@ export class User {
     comment: 'user name',
   })
   username: string;
+
+  @Column({
+    type: 'enum',
+    enum: Gender,
+    default: Gender.male,
+  })
+  gender: Gender;
 
   @Column({
     length: 50,
@@ -44,7 +56,7 @@ export class User {
 
   @Column({
     comment: 'avatar',
-    length: 100,
+    length: 150,
     nullable: true,
   })
   avatar: string;
@@ -93,7 +105,7 @@ export class User {
   })
   updateAt: Date;
 
-  @ManyToMany((type) => Role)
+  @ManyToMany(() => Role)
   @JoinTable({
     name: 'user_roles',
     // inverseJoinColumn: { name: 'rolessId' },

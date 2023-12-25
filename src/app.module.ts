@@ -3,7 +3,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserModule } from './user/user.module';
-import { Permission } from './user/entities/permission';
+import { Permission } from './user/entities/permission.entity';
 import { Role } from './user/entities/role.entity';
 import { User } from './user/entities/user.entity';
 import { RedisModule } from './redis/redis.module';
@@ -12,6 +12,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { LoginGuard } from './login.guard';
 import { PermissionGuard } from './permission.guard';
+import { ConferenceRoomModule } from './conference-room/conference-room.module';
 @Module({
   imports: [
     JwtModule.registerAsync({
@@ -33,9 +34,10 @@ import { PermissionGuard } from './permission.guard';
           username: configService.get('mysql_server_username'),
           password: configService.get('mysql_server_password'),
           database: configService.get('mysql_server_database'),
-          synchronize: true,
+          synchronize: false,
           logging: true,
-          entities: [User, Role, Permission],
+          // entities: ['src/**/*.entity.ts'],
+          // migrations: ['src/migrations/**/*.ts'],
           poolSize: 10,
           connectorPackage: 'mysql2',
           extra: {
@@ -52,6 +54,7 @@ import { PermissionGuard } from './permission.guard';
     UserModule,
     RedisModule,
     EmailModule,
+    ConferenceRoomModule,
   ],
   controllers: [AppController],
   providers: [
