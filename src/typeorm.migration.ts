@@ -22,7 +22,8 @@ const ormConfigForCli = {
   // entities: [User, Permission, Role],
   entities: ['src/**/*.entity.ts'],
   migrations: ['src/migrations/*.ts'],
-  // poolSize: 10,
+  connectorPackage: 'mysql2',
+  poolSize: 10,
   // logger: 'file',
 };
 

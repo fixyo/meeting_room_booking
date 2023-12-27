@@ -54,6 +54,7 @@ export class UserController {
   private userRepository: Repository<User>;
 
   @Get('initData')
+  @RequireLogin(false)
   async initData() {
     await this.userService.initData();
     return 'success';

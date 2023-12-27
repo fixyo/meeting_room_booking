@@ -13,6 +13,15 @@ import { JwtModule } from '@nestjs/jwt';
 import { LoginGuard } from './login.guard';
 import { PermissionGuard } from './permission.guard';
 import { ConferenceRoomModule } from './conference-room/conference-room.module';
+import dataSource from './typeorm.migration';
+import * as path from 'path';
+import * as fastGlob from 'fast-glob';
+console.log();
+const p = path.join(__dirname, './**/entities/*.entity.js').replace(/\\/g, '/');
+console.log(p, '------');
+const jobFiles = fastGlob.sync(p);
+
+console.log(jobFiles);
 @Module({
   imports: [
     JwtModule.registerAsync({
@@ -25,6 +34,7 @@ import { ConferenceRoomModule } from './conference-room/conference-room.module';
       },
       inject: [ConfigService],
     }),
+    // TypeOrmModule.forRoot(dataSource as any),
     TypeOrmModule.forRootAsync({
       useFactory(configService: ConfigService) {
         return {
@@ -36,7 +46,7 @@ import { ConferenceRoomModule } from './conference-room/conference-room.module';
           database: configService.get('mysql_server_database'),
           synchronize: false,
           logging: true,
-          // entities: ['src/**/*.entity.ts'],
+          entities: [path.join(__dirname, './**/entities/*.entity.js')],
           // migrations: ['src/migrations/**/*.ts'],
           poolSize: 10,
           connectorPackage: 'mysql2',

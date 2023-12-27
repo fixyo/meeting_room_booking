@@ -36,6 +36,7 @@
     "class-validator": "^0.14.0",
     "dayjs": "^1.11.10",
     "dotenv": "^16.3.1",
+    "fast-glob": "^3.3.2",
     "mysql2": "^3.6.5",
     "nodemailer": "^6.9.7",
     "redis": "^4.6.11",
