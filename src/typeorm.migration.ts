@@ -1,11 +1,15 @@
 import { config } from 'dotenv';
 import * as path from 'path';
 import { DataSource, DataSourceOptions } from 'typeorm';
-import { User } from './user/entities/user.entity';
-import { Permission } from './user/entities/permission.entity';
-import { Role } from './user/entities/role.entity';
+// import { User } from './user/entities/user.entity';
+// import { Permission } from './user/entities/permission.entity';
+// import { Role } from './user/entities/role.entity';
 
-config({ path: path.join(__dirname, '.env') });
+console.log('dirname=====', __dirname)
+console.log(path.join(__dirname, '.env') )
+config({ path: path.join(__dirname, '..', '.env') });
+console.log(process.env.mysql_server_password, process.env.mysql_server_host)
+console.log(path.join(__dirname, 'migrations/*.js'))
 
 const ormConfigForCli = {
   type: 'mysql',
@@ -16,12 +20,12 @@ const ormConfigForCli = {
   database: process.env.mysql_server_database,
   synchronize: false,
   logging: true,
-  // entities: [__dirname + '/**/*.entity.{ts, js}'],
+  entities: [__dirname + '/**/*.entity.{ts, js}'],
   // entities: ['/src/**/*.entity.{ts, js}'],
   // entities: [path.join(__dirname, '**', '*.entity.{js,ts}')],
   // entities: [User, Permission, Role],
-  entities: ['src/**/*.entity.ts'],
-  migrations: ['src/migrations/*.ts'],
+  // entities: ['src/**/*.entity.ts'],
+  migrations: [path.join(__dirname, 'migrations/*.js')],
   connectorPackage: 'mysql2',
   poolSize: 10,
   // logger: 'file',
