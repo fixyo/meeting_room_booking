@@ -3,9 +3,9 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserModule } from './user/user.module';
-import { Permission } from './user/entities/permission.entity';
-import { Role } from './user/entities/role.entity';
-import { User } from './user/entities/user.entity';
+// import { Permission } from './user/entities/permission.entity';
+// import { Role } from './user/entities/role.entity';
+// import { User } from './user/entities/user.entity';
 import { RedisModule } from './redis/redis.module';
 import { EmailModule } from './email/email.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -13,15 +13,14 @@ import { JwtModule } from '@nestjs/jwt';
 import { LoginGuard } from './login.guard';
 import { PermissionGuard } from './permission.guard';
 import { ConferenceRoomModule } from './conference-room/conference-room.module';
-import dataSource from './typeorm.migration';
 import * as path from 'path';
 import * as fastGlob from 'fast-glob';
-console.log();
+
 const p = path.join(__dirname, './**/entities/*.entity.js').replace(/\\/g, '/');
 console.log(p, '------');
 const jobFiles = fastGlob.sync(p);
-
 console.log(jobFiles);
+
 @Module({
   imports: [
     JwtModule.registerAsync({
@@ -47,7 +46,7 @@ console.log(jobFiles);
           synchronize: false,
           logging: true,
           entities: [path.join(__dirname, './**/entities/*.entity.js')],
-          // migrations: ['src/migrations/**/*.ts'],
+          // migrations: ['./src/migration/**.ts'],
           poolSize: 10,
           connectorPackage: 'mysql2',
           extra: {

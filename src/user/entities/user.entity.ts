@@ -29,6 +29,12 @@ export class User {
   username: string;
 
   @Column({
+    length: 50,
+    comment: 'nickname'
+  })
+  nickname2222: string;
+
+  @Column({
     type: 'enum',
     enum: Gender,
     default: Gender.male,
@@ -73,6 +79,9 @@ export class User {
     default: false,
   })
   isFrozen: boolean;
+
+  @Column() 
+  test: string 
 
   @Column({
     comment: 'is adamin',

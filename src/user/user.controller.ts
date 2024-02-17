@@ -90,7 +90,7 @@ export class UserController {
   })
   @ApiResponse({
     status: HttpStatus.OK,
-    description: 'regist succeed/failed',
+    description: 'register succeed/failed',
     type: String,
   })
   async register(@Body() registerUser: RegisterUserDto) {
